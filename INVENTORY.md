@@ -97,12 +97,49 @@ Banregio), independiente del resto.
 ## 4. Hallazgos de seguridad
 
 ### 4.1 API key de JotForm hardcodeada (crítico)
-Valor `6e2676fa4067aecefdfae6fca7c4bb41`, repetido en **al menos 25 archivos**
-distintos entre `vilarkptl`, `cPanel` y `ryby.lease` (config.php, .js, .html,
-.py, .env). Cualquiera con acceso de lectura al código puede leer, escribir y
-borrar submissions de todos los formularios de la cuenta. **Acción para el
-dueño del negocio:** rotar la key desde el dashboard de JotForm; ningún
-agente puede hacerlo por él.
+Valor `6e2676fa4067aecefdfae6fca7c4bb41`. El alcance real es mayor de lo que
+parecía en el primer barrido:
+
+- **Backend (PHP/Python), ya corregido en la sesión 2026-07-02** — 10
+  archivos ahora leen `getenv('JOTFORM_API_KEY')` en vez de tener la key
+  literal: `vilarkptl/dashboard/api/config.php`,
+  `vilarkptl/dashboard/pages/jotform_submit.php`,
+  `cPanel/public_html/{agata.financial,vilarkptl.com}/dashboard/api/config.php`,
+  `cPanel/public_html/kptl.mx/dashboard/api2/config.php`,
+  `cPanel/public_html/vilarkptl.com/dashboard/pages/jotform_submit.php`,
+  `cPanel/public_html/agata.financial/legal/LDOCR/{proxy.php,proxy(2).php,proxy3.php}`
+  (solo la línea `$JF_KEY`, no se tocó `$CLAUDE_KEY` — ver §4.3),
+  `ryby.lease/html/credit-agents/api/scripts/migrate_jotform.py` (se quitó el
+  fallback hardcodeado). **Esto no rota la key** — solo hace que el código ya
+  no la tenga escrita; sigue siendo la misma key comprometida hasta que se
+  rote en JotForm. El servidor real deberá exportar `JOTFORM_API_KEY` (p.ej.
+  vía Apache `SetEnv`, `.htaccess`, o el `.env` de `credit-agents`) o estos
+  proxies quedarán sin key (fallan de forma controlada, no con fatal error).
+- **Frontend (JS que corre en el navegador) — NO corregido, alcance mucho
+  mayor de lo estimado inicialmente:** ~41 archivos `.js` en `vilarkptl` y
+  ~146 en `cPanel/public_html` (más sus duplicados en `ryby.lease/html/`)
+  tienen la key embebida directamente como `const apiKey = '...'` o
+  `const JOTFORM_API_KEY = '...'` — visible para cualquier visitante del
+  sitio vía "ver código fuente", sin necesitar acceso al repo. Patrón
+  encontrado en `base_num.js`, `bdd.js`, `sendtable.js`, `linkJotform.js`,
+  `status_updater.js`, `Banregio/index-script.js`, y decenas más bajo
+  `dashboard/assets/js/**`. **Esto no se corrigió porque no es un simple
+  cambio de "variable de entorno"** (el navegador no tiene `process.env`):
+  requiere decidir si estas llamadas se reescriben para pasar por un proxy
+  backend (como `jotform-proxy.php`, que ya existe) o se elimina el uso
+  directo de la API de JotForm desde el cliente. Pendiente para Fase 1
+  extendida — ver `roadmap.md`.
+- **Otros duplicados no tocados a propósito:** las copias en
+  `ryby.lease/html/vilarkptl.com/**` y `ryby.lease/html/cpanel-repo/**` son
+  snapshots viejos (ver §"Duplicación entre repos"); no se editaron para no
+  inflar el diff sin beneficio real de seguridad.
+
+Cualquiera con acceso de lectura al código (o, para las ~187 rutas
+frontend, cualquier visitante del sitio) puede leer, escribir y borrar
+submissions de todos los formularios de la cuenta. **Acción para el dueño
+del negocio:** rotar la key desde el dashboard de JotForm; ningún agente
+puede hacerlo por él. El usuario confirmó en la sesión 2026-07-02 que la
+rotará él mismo más adelante.
 
 ### 4.2 Archivos `.env` reales committeados (crítico, más amplio que JotForm)
 `ryby.lease` tiene decenas de archivos `.env` (no `.env.example`) con
@@ -141,7 +178,48 @@ exposición de secretos a nivel de organización, no solo de JotForm. Requiere:
    describe la guía de docker-sandbox) para secretos de negocio de aquí en
    adelante.
 
-### 4.3 Otros archivos sensibles
+### 4.3 API keys de Anthropic (Claude) hardcodeadas — crítico, riesgo de costo directo
+
+A diferencia de la key de JotForm (riesgo de integridad de datos), una key de
+Anthropic filtrada tiene **riesgo económico directo**: cualquiera con acceso
+de lectura al repo puede facturar a la cuenta del dueño. Encontradas al menos
+**3 keys distintas** (`sk-ant-api03-...`), hardcodeadas como `$CLAUDE_KEY` en:
+
+```
+cPanel/public_html/agata.financial/legal/LDOCR/proxy.php      (línea 11)
+cPanel/public_html/agata.financial/legal/LDOCR/proxy(2).php   (línea 11)
+cPanel/public_html/agata.financial/legal/LDOCR/proxy3.php     (línea 11)
+ryby.lease/catalogos/OCR/proxy.php                             (duplicado)
+ryby.lease/catalogos/OCR/v55/proxy.php                         (key distinta)
+ryby.lease/html/cpanel-repo/public_html/agata.financial/legal/LDOCR/*.php (duplicados)
+```
+
+Estos proxies exponen además un endpoint `?action=delete&id=` que borra
+submissions de JotForm usando la misma key de JotForm filtrada (§4.1), y un
+endpoint `?test&ping` que hace una llamada real a Anthropic para diagnóstico.
+
+Además, se confirmó (sin imprimir valores) que los siguientes `.env` reales
+declaran variables de LLM/servicios de terceros — hay que asumir que pueden
+tener valores reales y auditarlos uno por uno antes de rotar:
+
+```
+ryby.lease/catalogos/OCR/v57/api/.env       → ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, JOTFORM_API_KEY, SECRET_KEY
+ryby.lease/catalogos/OCR/v59/api/.env       → ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_CLIENT_SECRET, JOTFORM_API_KEY, FLASK_SECRET_KEY
+ryby.lease/catalogos/ocr/v57/api/.env       → ANTHROPIC_API_KEY, DEEPSEEK_API_KEY, JOTFORM_API_KEY, SECRET_KEY
+ryby.lease/catalogos/testing/v60/api/.env   → ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_CLIENT_SECRET, JOTFORM_API_KEY, FLASK_SECRET_KEY
+vilarkptl/DeCabeceraTax/catalogos/SAT_API/php/.env → ANTHROPIC_API_KEY, ANTHROPIC_ADMIN_KEY, GROK_API_KEY, GROQ_API_KEY, PERPLEXITY_API_KEY
+vilarkptl/financial-bot/.env                → DEEPSEEK_API_KEY, GOOGLE_API_KEY, FIN_TELEGRAM_BOT_TOKEN, SIM_GV_BOT_TOKEN
+```
+
+**El usuario confirmó en la sesión 2026-07-02 que ya tiene identificadas
+estas keys de Anthropic** y se encarga de rotarlas por su cuenta — no
+requiere acción de un agente para esa parte. Sigue pendiente: auditar el
+resto de `.env` listados en §4.2 (no se sabe si tienen valores reales o
+vacíos) y decidir si estos proxies (`proxy.php`/`proxy(2).php`/`proxy3.php`,
+que parecen builds/versiones sucesivas del mismo endpoint) se consolidan en
+uno solo con la key en variable de entorno.
+
+### 4.4 Otros archivos sensibles
 - `vilarkptl/google_token.json` — probable token OAuth de Google (Calendar,
   usado por `calendar_listener.php` / `gmailauth.php`). No se abrió su
   contenido.

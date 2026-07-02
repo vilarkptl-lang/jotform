@@ -34,14 +34,29 @@ ya filtrada.
 
 - [ ] Rotar la API key de JotForm (`6e2676fa4067aecefdfae6fca7c4bb41`) desde
       el dashboard de JotForm. Solo el dueño de la cuenta puede hacerlo.
+      **Confirmado 2026-07-02: el usuario la rotará él mismo, pendiente.**
+- [ ] Rotar las ≥3 API keys de Anthropic hardcodeadas en
+      `agata.financial/legal/LDOCR/proxy*.php` (ver `INVENTORY.md` §4.3).
+      **El usuario confirmó 2026-07-02 que ya las tiene identificadas y las
+      rota por su cuenta.**
+- [x] Refactorizar el **backend** (PHP/Python) para leer la key de JotForm
+      de variable de entorno en vez de tenerla hardcodeada — hecho
+      2026-07-02 en 10 archivos (ver `INVENTORY.md` §4.1). **Esto no rota la
+      key**, solo saca el valor del código fuente; el servidor deberá
+      exportar `JOTFORM_API_KEY` para que estos archivos sigan funcionando
+      una vez que se rote.
+- [ ] Reescribir los ~187 archivos **frontend** (JS servido al navegador) que
+      tienen la key embebida directamente (`const apiKey = '...'`). Esto es
+      más grande de lo estimado inicialmente y no es un simple cambio a
+      variable de entorno (el navegador no tiene acceso a env vars) — requiere
+      decidir si se reescriben para pasar por el proxy backend existente
+      (`jotform-proxy.php`) o se elimina el llamado directo a JotForm desde el
+      cliente. Ver `INVENTORY.md` §4.1 para la lista completa.
 - [ ] Auditar cada `.env` real listado en `INVENTORY.md` §4.2: qué
       credenciales contiene, si siguen vigentes, rotarlas.
 - [ ] Decidir estrategia para el historial de git de `ryby.lease` (los
       secretos viejos siguen en los commits aunque se borren los archivos):
       reescribir historial vs. archivar el repo y empezar uno limpio.
-- [ ] Una vez rotada la key, refactorizar `config.php`, `jotform_submit.php`,
-      `actualizar_jotform.php` y `migrate_jotform.py` para leerla solo de
-      variable de entorno / Infisical, sin fallback hardcodeado.
 - [ ] Añadir `.env`, `.env.*` (excepto `.env.example`) a `.gitignore` en los
       6 repos.
 
