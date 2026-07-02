@@ -1,0 +1,7 @@
+# Dependencias mínimas para correr las herramientas de credit-agents dentro del sandbox
+# (ver ryby.lease/html/credit-agents/api/requirements.txt para la lista completa real)
+mysql-connector-python
+requests
+python-dotenv
+flask
+flask-cors
