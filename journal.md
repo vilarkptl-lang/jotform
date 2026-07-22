@@ -33,7 +33,7 @@ aquí se documenta y se deja el scaffold, pero no se ejecutó.
    (`vilarkptl/dashboard/api/config.php`, `jotform-proxy.php`,
    `jotform_submit.php`, `actualizar_jotform.php`, `global/js/jotform.js`) y
    se encontró una **API key de JotForm hardcodeada en texto plano**
-   (`6e2676fa4067aecefdfae6fca7c4bb41`), repetida en ~25 archivos entre
+   (`6e2676fa... (REDACTADO 2026-07-22 -- valor completo removido de este repo publico, ver Cyber-Brain para el hallazgo)`), repetida en ~25 archivos entre
    `vilarkptl`, `cPanel` y `ryby.lease`.
 5. Se preguntó al usuario (`AskUserQuestion`) qué hacer con ese hallazgo y
    cuál era el alcance real esperado para la sesión, dado que no había acceso
@@ -114,7 +114,7 @@ JotForm. Se agregó el detalle a `INVENTORY.md` §4.3 sin imprimir los valores
 completos de las keys.
 
 **Qué se hizo (refactor backend de JotForm a variable de entorno):**
-Se reemplazó el literal `6e2676fa4067aecefdfae6fca7c4bb41` por
+Se reemplazó el literal `6e2676fa... (REDACTADO 2026-07-22 -- valor completo removido de este repo publico, ver Cyber-Brain para el hallazgo)` por
 `getenv('JOTFORM_API_KEY') ?: ''` (PHP) o `os.getenv("JOTFORM_API_KEY", "")`
 (Python) en 10 archivos:
 - `vilarkptl/dashboard/api/config.php`

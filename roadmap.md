@@ -32,7 +32,7 @@ de herramientas — sin ejecutar nada contra infraestructura real.
 cualquier sandbox o staging que se conecte a JotForm seguiría usando una key
 ya filtrada.
 
-- [ ] Rotar la API key de JotForm (`6e2676fa4067aecefdfae6fca7c4bb41`) desde
+- [ ] Rotar la API key de JotForm (`6e2676fa... (REDACTADO 2026-07-22 -- valor completo removido de este repo publico, ver Cyber-Brain para el hallazgo)`) desde
       el dashboard de JotForm. Solo el dueño de la cuenta puede hacerlo.
       **Confirmado 2026-07-02: el usuario la rotará él mismo, pendiente.**
 - [ ] Rotar las ≥3 API keys de Anthropic hardcodeadas en

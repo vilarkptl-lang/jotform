@@ -38,7 +38,7 @@ Cualquier agente que opere sobre estos 6 repos con acceso a un servidor real
 **Reglas absolutas:**
 - La API key de JotForm usada aquí **debe ser una key nueva, rotada**
   después del incidente documentado en `../INVENTORY.md` §4.1. Nunca
-  reutilizar `6e2676fa4067aecefdfae6fca7c4bb41`.
+  reutilizar `6e2676fa... (REDACTADO 2026-07-22 -- valor completo removido de este repo publico, ver Cyber-Brain para el hallazgo)`.
 - Tokens de deploy (Cloudflare, AWS, etc.) **nunca** entran al sandbox.
 - El sandbox solo tiene un PAT de GitHub scoped a los repos de este proyecto.
 - Secretos de negocio → vía Infisical, nunca hardcodeados (ver

@@ -97,7 +97,7 @@ Banregio), independiente del resto.
 ## 4. Hallazgos de seguridad
 
 ### 4.1 API key de JotForm hardcodeada (crítico)
-Valor `6e2676fa4067aecefdfae6fca7c4bb41`. El alcance real es mayor de lo que
+Valor `6e2676fa... (REDACTADO 2026-07-22 -- valor completo removido de este repo publico, ver Cyber-Brain para el hallazgo)`. El alcance real es mayor de lo que
 parecía en el primer barrido:
 
 - **Backend (PHP/Python), ya corregido en la sesión 2026-07-02** — 10
